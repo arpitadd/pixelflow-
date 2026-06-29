@@ -18,7 +18,7 @@ export function Navbar() {
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
             <span className="text-primary-content font-bold text-sm">PF</span>
           </div>
-          <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:block">
             {APP_NAME}
           </span>
         </Link>

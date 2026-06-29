@@ -15,7 +15,7 @@ export default function HomePage() {
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
             <span className="text-primary-content font-bold text-xs sm:text-sm tracking-wider">PF</span>
           </div>
-          <span className="font-extrabold text-lg sm:text-xl tracking-tight text-base-content hidden xs:block sm:block">
+          <span className="font-extrabold text-lg sm:text-xl tracking-tight text-base-content hidden sm:block">
             {APP_NAME}
           </span>
         </div>
@@ -34,12 +34,12 @@ export default function HomePage() {
         
         {/* Left: Copy & CTA */}
         <div className="flex-1 text-center lg:text-left flex flex-col items-center lg:items-start pt-10 lg:pt-0">
-          <div className="inline-flex items-center justify-center gap-2 mb-6 sm:mb-8 px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-primary/5 border border-primary/20 text-primary shadow-sm leading-snug max-w-full">
+          <div className="inline-flex items-center justify-center gap-2 mb-6 sm:mb-8 px-4 py-2 text-[11px] sm:text-sm font-semibold rounded-full bg-primary/5 border border-primary/20 text-primary shadow-sm leading-snug max-w-full">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="truncate whitespace-normal">The New Home for Creative Portfolios</span>
+            <span className="whitespace-nowrap">The New Home for Creative Portfolios</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black max-w-2xl leading-[1.1] mb-4 sm:mb-6 tracking-tight text-base-content">

@@ -56,43 +56,102 @@ export default function UploadPage() {
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
 
+  const uploadFileDirectly = (
+    file: File,
+    cloudName: string,
+    apiKey: string,
+    timestamp: number,
+    signature: string,
+    folder: string,
+    resourceType: "image" | "video"
+  ): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          // Map 0-100% to 15-85% progress
+          setUploadProgress(15 + Math.round(percent * 0.7));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            resolve(res);
+          } catch {
+            reject(new Error("Failed to parse Cloudinary response"));
+          }
+        } else {
+          try {
+            const err = JSON.parse(xhr.responseText);
+            reject(new Error(err.error?.message ?? "Cloudinary upload failed"));
+          } catch {
+            reject(new Error("Cloudinary upload failed"));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.onabort = () => reject(new Error("Upload aborted"));
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", timestamp.toString());
+      formData.append("signature", signature);
+      formData.append("folder", folder);
+
+      xhr.send(formData);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) return toast("Please select a photo or video", "error");
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
 
     try {
-      // Step 1: Upload file to Cloudinary via our API
-      toast("Uploading to cloud... ☁️", "info");
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      setUploadProgress(30);
-      const uploadRes = await fetch("/api/upload", {
+      // Step 1: Request signature credentials from backend
+      const sigRes = await fetch("/api/upload/signature", {
         method: "POST",
-        body: formData,
       });
-
-      setUploadProgress(70);
-      const uploadData = await uploadRes.json();
-
-      if (!uploadData.success) {
-        toast(uploadData.error ?? "Upload failed", "error");
+      const sigData = await sigRes.json();
+      if (!sigData.success) {
+        toast(sigData.error ?? "Failed to get upload signature", "error");
         setUploading(false);
         setUploadProgress(0);
         return;
       }
 
-      // Step 2: Save post to database with the Cloudinary URL
-      setUploadProgress(85);
+      const { signature, timestamp, apiKey, cloudName, folder } = sigData.data;
+      setUploadProgress(15);
+
+      // Step 2: Upload file directly to Cloudinary
+      toast("Uploading to cloud... ☁️", "info");
+      const cloudinaryResult = await uploadFileDirectly(
+        selectedFile,
+        cloudName,
+        apiKey,
+        timestamp,
+        signature,
+        folder,
+        mediaType
+      );
+
+      // Step 3: Save post details to local database
+      setUploadProgress(90);
       const postRes = await fetch(API_ROUTES.POSTS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          image: uploadData.data.url,
-          mediaType: uploadData.data.mediaType,
+          image: cloudinaryResult.secure_url,
+          mediaType: cloudinaryResult.resource_type === "video" ? "video" : "image",
           caption,
         }),
       });
@@ -106,8 +165,8 @@ export default function UploadPage() {
       } else {
         toast(postData.error ?? "Failed to save post", "error");
       }
-    } catch {
-      toast("Network error. Please try again.", "error");
+    } catch (err: any) {
+      toast(err.message ?? "Network error. Please try again.", "error");
     } finally {
       setUploading(false);
       setUploadProgress(0);
