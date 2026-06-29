@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (data.success) {
         await refreshUser();
-        router.push(ROUTES.FEED);
+        window.location.href = ROUTES.FEED;
         return { success: true };
       }
       return { success: false, error: data.error };
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (data.success) {
         await refreshUser();
-        router.push(ROUTES.FEED);
+        window.location.href = ROUTES.FEED;
         return { success: true };
       }
       return { success: false, error: data.error };
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await fetch(API_ROUTES.LOGOUT, { method: "POST" });
     setUser(null);
-    router.push(ROUTES.LOGIN);
+    window.location.href = ROUTES.LOGIN;
   };
 
   return (
