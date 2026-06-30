@@ -13,9 +13,33 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") ?? "1", 10);
+    const feedType = searchParams.get("feed"); // "following" | null
     const skip = (page - 1) * POSTS_PER_PAGE;
 
-    const posts = await Post.find()
+    let filter: Record<string, unknown> = {};
+
+    if (feedType === "following") {
+      const jwtUser = await getCurrentUser();
+      if (!jwtUser) {
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      }
+
+      const User = (await import("@/models/User")).default;
+      const me = await User.findById(jwtUser.userId).select("following");
+
+      if (!me || me.following.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: [],
+          isEmpty: true,
+          pagination: { page: 1, totalPages: 0, hasMore: false },
+        });
+      }
+
+      filter = { author: { $in: me.following } };
+    }
+
+    const posts = await Post.find(filter)
       .populate("author", "name username profileImage")
       .populate({
         path: "comments",
@@ -26,7 +50,7 @@ export async function GET(request: NextRequest) {
       .skip(skip)
       .limit(POSTS_PER_PAGE);
 
-    const total = await Post.countDocuments();
+    const total = await Post.countDocuments(filter);
 
     return NextResponse.json({
       success: true,
@@ -42,6 +66,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }
+
 
 // POST /api/posts - Create a new post
 export async function POST(request: NextRequest) {

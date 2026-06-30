@@ -21,6 +21,7 @@ export const API_ROUTES = {
   ME: "/api/auth/me",
   USERS: "/api/users",
   USER_BY_USERNAME: (username: string) => `/api/users/${username}`,
+  FOLLOW_USER: (username: string) => `/api/users/${username}/follow`,
   POSTS: "/api/posts",
   POST_BY_ID: (id: string) => `/api/posts/${id}`,
   LIKE_POST: (id: string) => `/api/posts/${id}/like`,

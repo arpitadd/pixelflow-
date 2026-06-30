@@ -7,6 +7,9 @@ export interface IUser {
   email: string;
   bio?: string;
   profileImage?: string;
+  followers?: string[];
+  following?: string[];
+  isFollowing?: boolean; // injected by profile API for the viewer's perspective
   createdAt: string;
 }
 

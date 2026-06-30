@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { IPost } from "@/types";
 import { Avatar } from "@/components/ui/Avatar";
+import { FollowButton } from "@/components/ui/FollowButton";
 import { timeAgo } from "@/lib/utils";
 import { API_ROUTES, ROUTES } from "@/constants";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState(post.comments);
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const isOwner = user?._id === post.author._id;
 
   const handleLike = async () => {
@@ -109,23 +111,37 @@ export function PostCard({ post, onDelete }: PostCardProps) {
             </div>
           </Link>
 
-          {isOwner && (
-            <div className="dropdown dropdown-end">
-              <div tabIndex={0} role="button" className="btn btn-ghost btn-xs btn-circle">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
-                </svg>
+          <div className="flex items-center gap-2 ml-auto">
+            {/* Inline follow button — only for other users not yet followed */}
+            {!isOwner && !isFollowingAuthor && (
+              <FollowButton
+                username={post.author.username}
+                initialIsFollowing={false}
+                size="sm"
+                onToggle={(following) => {
+                  if (following) setIsFollowingAuthor(true);
+                }}
+              />
+            )}
+
+            {isOwner && (
+              <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className="btn btn-ghost btn-xs btn-circle">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
+                  </svg>
+                </div>
+                <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow-xl border border-base-300">
+                  <li>
+                    <Link href={ROUTES.POST(post._id)} className="text-sm">View Post</Link>
+                  </li>
+                  <li>
+                    <button onClick={handleDeletePost} className="text-error text-sm">Delete</button>
+                  </li>
+                </ul>
               </div>
-              <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-10 w-40 p-2 shadow-xl border border-base-300">
-                <li>
-                  <Link href={ROUTES.POST(post._id)} className="text-sm">View Post</Link>
-                </li>
-                <li>
-                  <button onClick={handleDeletePost} className="text-error text-sm">Delete</button>
-                </li>
-              </ul>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

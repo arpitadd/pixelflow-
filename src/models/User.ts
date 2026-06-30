@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Model, CallbackError } from "mongoose";
+import mongoose, { Document, Schema, Model, Types } from "mongoose";
 import bcrypt from "bcryptjs";
 
 export interface IUserDocument extends Document {
@@ -8,6 +8,8 @@ export interface IUserDocument extends Document {
   password: string;
   bio: string;
   profileImage: string;
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -53,6 +55,18 @@ const UserSchema = new Schema<IUserDocument>(
       type: String,
       default: "",
     },
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

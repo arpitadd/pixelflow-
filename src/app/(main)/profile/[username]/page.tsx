@@ -7,6 +7,7 @@ import Link from "next/link";
 import { IUser, IPost } from "@/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
+import { FollowButton } from "@/components/ui/FollowButton";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/constants";
 import { timeAgo } from "@/lib/utils";
@@ -18,6 +19,8 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<IPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<IPost | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,6 +30,8 @@ export default function ProfilePage() {
         if (data.success) {
           setProfile(data.data.user);
           setPosts(data.data.posts);
+          setFollowersCount(data.data.user.followersCount ?? data.data.user.followers?.length ?? 0);
+          setIsFollowing(data.data.user.isFollowing ?? false);
         }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
@@ -65,11 +70,23 @@ export default function ProfilePage() {
                   <h1 className="text-2xl font-bold">{profile.name}</h1>
                   <p className="text-base-content/50 text-sm">@{profile.username}</p>
                 </div>
-                {isOwnProfile && (
-                  <Link href={ROUTES.SETTINGS} className="btn btn-outline btn-sm sm:ml-auto">
-                    Edit Profile
-                  </Link>
-                )}
+                <div className="flex items-center gap-2 sm:ml-auto">
+                  {isOwnProfile ? (
+                    <Link href={ROUTES.SETTINGS} className="btn btn-outline btn-sm">
+                      Edit Profile
+                    </Link>
+                  ) : (
+                    <FollowButton
+                      username={profile.username}
+                      initialIsFollowing={isFollowing}
+                      size="sm"
+                      onToggle={(following, count) => {
+                        setIsFollowing(following);
+                        setFollowersCount(count);
+                      }}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Stats */}
@@ -77,6 +94,14 @@ export default function ProfilePage() {
                 <div className="text-center">
                   <p className="font-bold text-lg leading-none">{posts.length}</p>
                   <p className="text-xs text-base-content/50 mt-1">Posts</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg leading-none">{followersCount}</p>
+                  <p className="text-xs text-base-content/50 mt-1">Followers</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg leading-none">{profile.following?.length ?? 0}</p>
+                  <p className="text-xs text-base-content/50 mt-1">Following</p>
                 </div>
               </div>
 

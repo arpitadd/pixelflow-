@@ -13,6 +13,7 @@ export async function GET(
   try {
     await connectDB();
     const { username } = await params;
+    const jwtUser = await getCurrentUser();
 
     const user = await User.findOne({ username }).select("-password");
     if (!user) {
@@ -23,12 +24,29 @@ export async function GET(
       .populate("author", "name username profileImage")
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({ success: true, data: { user, posts } });
+    // Determine if the current viewer is following this profile
+    let isFollowing = false;
+    if (jwtUser && jwtUser.userId !== user._id.toString()) {
+      isFollowing = user.followers.some(
+        (id) => id.toString() === jwtUser.userId
+      );
+    }
+
+    const userObj = user.toObject();
+    const responseUser = {
+      ...userObj,
+      followersCount: user.followers.length,
+      followingCount: user.following.length,
+      isFollowing,
+    };
+
+    return NextResponse.json({ success: true, data: { user: responseUser, posts } });
   } catch (error) {
     console.error("Get user error:", error);
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }
+
 
 // PATCH /api/users/[username] - Update user profile
 export async function PATCH(
